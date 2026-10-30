@@ -1,0 +1,25 @@
+﻿index,t_ms,raw_code,raw_std,true_mv,cal_mv,lin_mv,cal_err_mv,lin_err_mv,n_avg
+1,7106,2178.35,5.57,1603.0,1617.1,1755.4,14.10,152.45,120
+
+# vref_mv,3300.0,full_scale,4095.0
+# exported,2026-10-30T10:06:33
+# cfg_pin,GPIO3
+# cfg_chan,3
+# cfg_atten,12
+# cfg_width,12
+# cfg_n,64
+# cfg_period_ms,50
+# cfg_cali,1
+# burst_summary
+# burst_n,8192
+# burst_fs,7415.575
+# burst_mean_code,2177.017
+# burst_pp_code,130.0
+# burst_std_code,5.965
+# burst_f_peak,1020.342
+# burst_amp_50_mv,0.095
+# burst_amp_100_mv,0.063
+# burst_pp_mv,104.762
+# burst_std_mv,4.807
+# burst_amp_peak_mv,0.166
+# burst_bin_hz,0.905

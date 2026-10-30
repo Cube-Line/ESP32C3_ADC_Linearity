@@ -1,0 +1,20 @@
+build/
+sdkconfig
+sdkconfig.old
+managed_components/
+.venv/
+__pycache__/
+*.pyc
+
+# 板载固件备份（不入库）
+backup/
+
+# GUI 自动保存（用户数据，不入库）
+data/autosave_session.json
+data/autosave_session.json.tmp
+
+# 本地 Wi-Fi 凭据（不入库）
+main/wifi_secrets.h
+
+# 原始照片（EXIF 可能含位置信息，不入库）
+*.HEIC
