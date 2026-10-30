@@ -9,6 +9,7 @@ ESP32-C3 SuperMini ADC 线性度实验：对比 **ESP-IDF 校准曲线** 与 **�
 - Wi-Fi 干扰：STA 连接指定 Wi-Fi，GUI 一键开关，主机 UDP 广播压测（约 250 pps 双向）
 - 离线分析：`host/analyze.py` 对 CSV 生成统计、Markdown 报告与 PNG
 - 文档：见 [docs/README.md](docs/README.md)
+- 完整测试报告：[docs/report/ESP32C3_ADC_测试报告.pdf](docs/report/ESP32C3_ADC_测试报告.pdf)
 
 ## 快速开始
 

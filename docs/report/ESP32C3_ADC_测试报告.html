@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESP32-C3 ADC 线性度测试报告</title><style>
+:root{--ink:#172033;--muted:#5b6678;--line:#dfe5ee;--bg:#f5f7fb;--brand:#0b5cad;--brand2:#0f9d8a;--warn:#c0392b;--ok:#1e8449;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans CJK SC","WenQuanYi Zen Hei","Sarasa Gothic SC","Microsoft YaHei",sans-serif;line-height:1.65;font-size:14px}
+.page{max-width:1180px;margin:0 auto;background:#fff;box-shadow:0 8px 30px rgba(20,35,60,.08)}
+.cover{padding:54px 64px 34px;background:linear-gradient(135deg,#0b2e59 0%,#0b5cad 55%,#0f9d8a 100%);color:#fff;height:auto;min-height:0;overflow:visible;page-break-after:auto;margin:0;width:auto}
+.cover .kicker{letter-spacing:.18em;font-size:12px;opacity:.9;text-transform:uppercase}
+.cover h1{font-size:34px;line-height:1.25;margin:14px 0 10px;font-weight:800}
+.cover .sub{font-size:16px;opacity:.95;margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;gap:10px 26px;font-size:13px;opacity:.95}
+.cover-img{display:block;width:auto;max-width:100%;max-height:470px;margin:24px auto 0;border-radius:10px;border:4px solid rgba(255,255,255,.35);object-fit:contain}
+.caption{text-align:center;color:var(--muted);font-size:12px;margin:8px 0 0}
+.cover .caption{color:rgba(255,255,255,.92)}
+.cover-footer{padding:18px 64px 26px;background:#fff;page-break-after:always}
+.cover-footer .cards{grid-template-columns:repeat(4,1fr);margin:12px 0 8px}
+.cover-footer .card .v{font-size:21px;white-space:nowrap}
+main{padding:38px 64px 60px}
+h2{font-size:23px;margin:38px 0 12px;padding-bottom:7px;border-bottom:2px solid var(--line)}
+h3{font-size:17px;margin:24px 0 8px;color:#123a63}
+p{margin:8px 0}
+code{word-break:break-all;background:#f2f5f9;padding:1px 4px;border-radius:4px;font-size:.92em}
+ul,ol{margin:8px 0 8px 1.4em;padding:0}
+li{margin:4px 0}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
+.card{background:linear-gradient(180deg,#fff,#f7fafc);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card .v{font-size:25px;font-weight:800;color:var(--brand)}
+.card .l{font-size:12px;color:var(--muted);margin-top:2px}
+.callout{border-left:5px solid var(--brand);background:#eef5fc;padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+.callout.warn{border-left-color:var(--warn);background:#fdf0ee}
+.callout.ok{border-left-color:var(--ok);background:#eef8f2}
+table.data{width:100%;border-collapse:collapse;margin:12px 0 16px;font-size:12.5px}
+table.data th{background:#0f3159;color:#fff;font-weight:600;padding:8px 7px;text-align:left;white-space:nowrap}
+table.data td{padding:7px;border-bottom:1px solid var(--line);vertical-align:top}
+table.data tbody tr:nth-child(even){background:#f7f9fc}
+table.data td:nth-child(n+2){font-variant-numeric:tabular-nums}
+figure{margin:18px 0;text-align:center}
+figure img{max-width:100%;border:1px solid var(--line);border-radius:8px}
+figure.half{display:inline-block;width:48%;vertical-align:top;margin:1%}
+figcaption{font-size:12px;color:var(--muted);margin-top:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.small{font-size:12px;color:var(--muted)}
+.tag{display:inline-block;padding:1px 7px;border-radius:999px;background:#e8f0fb;color:#0b5cad;font-size:11px;margin-right:4px}
+.toc{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 20px;margin:18px 0}
+.toc a{color:var(--brand);text-decoration:none}
+.toc ol{margin:6px 0 0 1.2em}
+.footer{margin-top:46px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+.two-session{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}
+.session{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:#fbfdff}
+.session h3{margin-top:0}
+@page{size:A4;margin:14mm}
+@page cover{size:A4;margin:0}
+@media print{body{background:#fff}main{padding:0 0 6mm 0}.page{box-shadow:none;max-width:none;width:182mm}.cover{-webkit-print-color-adjust:exact;print-color-adjust:exact}h2{page-break-after:avoid}figure,table{page-break-inside:avoid}.cards{grid-template-columns:repeat(4,1fr)}}
+</style></head>
+<body><div class="page">
+<header class="cover">
+  <div class="kicker">ESP32-C3 · ADC Linearity · Test Report</div>
+  <h1>ESP32-C3 片内 ADC 校准与线性度测试报告</h1>
+  <p class="sub">ESP-IDF curve fitting 校准 vs 原始码线性换算 · 100 nF 滤波 · Wi-Fi 干扰</p>
+  <div class="meta">
+    <span>测试日期：2026-10-30</span>
+    <span>芯片：ESP32-C3（QFN32，rev v0.4）</span>
+    <span>板卡：ESP32-C3 SuperMini</span>
+    <span>MAC：AA:BB:CC:DD:EE:FF</span>
+    <span>固件：ESP-IDF v5.5.5</span>
+  </div>
+  <img class="cover-img" src="images/setup.jpg" alt="测试现场">
+  <p class="caption">图 0　测试现场：ESP32-C3 SuperMini + 103（10 kΩ）多圈电位器 + 万用表（100 nF 后加）</p>
+</header>
+<div class="cover-footer">
+  <div class="cards">
+    <div class="card"><div class="v">322</div><div class="l">两次会话标定点（291+31）</div></div>
+    <div class="card"><div class="v">6.73 mV</div><div class="l">IDF 校准 RMS（0.1~2.7 V）</div></div>
+    <div class="card"><div class="v">1.05 mV</div><div class="l">100 nF 后窗内 σ</div></div>
+    <div class="card"><div class="v">2.89 V</div><div class="l">12 dB 饱和点</div></div>
+  </div>
+  <p class="small">本报告包含：291 点全量程扫描（无 100 nF）、31 点 100 nF 复测、Wi-Fi 干扰 A/B、噪声频谱、精度与量程分析。</p>
+  <div class="callout ok" style="margin-top:10px"><b>核心结论：</b>0.1~2.7 V 范围内，IDF 校准 RMS 6.73 mV / max 12.6 mV；
+  原始码线性 RMS 162.6 mV / max 306.0 mV。加 100 nF 后噪声 σ 从 30.8 mV 降到 1.05 mV；
+  12 dB 档约 2.89 V 饱和，3.3 V 需 1:2 分压。</div>
+</div>
+<main>
+<div class="toc"><strong>目录</strong>
+<ol>
+<li><a href="#s1">测试目的</a></li>
+<li><a href="#s2">测试环境与方法</a></li>
+<li><a href="#s3">结论摘要</a></li>
+<li><a href="#s4">会话 A：291 点全量程扫描（无 100 nF）</a></li>
+<li><a href="#s5">会话 B：31 点复测（100 nF）</a></li>
+<li><a href="#s6">噪声、100 nF 与 Wi-Fi 干扰</a></li>
+<li><a href="#s7">分辨率、精确度与量程</a></li>
+<li><a href="#s8">建议</a></li>
+<li><a href="#s9">附录：数据文件与复现</a></li>
+</ol></div>
+
+<h2 id="s1">1. 测试目的</h2>
+<p>ESP32-C3 片内 ADC 在 12 dB 衰减下存在明显的非线性。本测试用同一路 ADC（GPIO3）同时输出：</p>
+<ul>
+<li><b>ESP-IDF 校准值</b>：<code>adc_cali_create_scheme_curve_fitting()</code> + <code>adc_cali_raw_to_voltage()</code>，使用 eFuse 出厂参数；</li>
+<li><b>原始码线性值</b>：<code>raw × 3300 / 4095</code>，即“直接使用”假设。</li>
+</ul>
+<p>以万用表读数为真值，量化两者的误差、斜率、INL、噪声、饱和区与 Wi-Fi 干扰，给出实际可用分辨率/精确度建议。</p>
+
+<h2 id="s2">2. 测试环境与方法</h2>
+<h3>2.1 硬件与软件</h3>
+<table class="data"><thead><tr><th>项目</th><th>配置</th></tr></thead><tbody><tr><td>芯片 / 板卡</td><td>ESP32-C3（QFN32，rev v0.4）/ ESP32-C3 SuperMini</td></tr><tr><td>ADC 输入</td><td>GPIO3（ADC1_CH3，丝印 3）</td></tr><tr><td>衰减 / 位宽</td><td>12 dB / 12 bit</td></tr><tr><td>过采样 / 周期</td><td>64 次 / 50 ms（20 Hz）</td></tr><tr><td>输入源</td><td>103（10 kΩ）多圈精密电位器，3V3/GND 分压，抽头接 GPIO3</td></tr><tr><td>滤波</td><td>100 nF 对 GND（会话 B 起加入；会话 A 未加）</td></tr><tr><td>真值</td><td>SANWA PC700 万用表逐点读数</td></tr><tr><td>固件</td><td>ESP-IDF v5.5.5，USB Serial/JTAG 115200</td></tr><tr><td>上位机</td><td>Python 3.14 + tkinter + matplotlib；host/gui.py</td></tr><tr><td>Wi-Fi 干扰</td><td>STA 连接指定 Wi-Fi（凭据已隐去）；主机 UDP 广播压测（约 210 pps / 2.4 Mb/s）</td></tr></tbody></table>
+
+<figure><img src="images/diagram_system.png" alt="系统框图">
+<figcaption>图 1　系统框图（示意图，脚本生成）：电位器 → GPIO3 → ESP32-C3 过采样/校准 →
+USB Serial/JTAG → 上位机 GUI；Wi-Fi 另走指定网络广播压测。</figcaption></figure>
+
+<h3>2.2 两次会话</h3>
+<div class="two-session">
+<div class="session"><h3>会话 A · 291 点</h3>
+<p class="small">2026-10-30 14:01 导出<br>无 100 nF<br>真值 31.2~3313 mV<br>291 点（可用 255，饱和 36）</p></div>
+<div class="session"><h3>会话 B · 31 点</h3>
+<p class="small">2026-10-30 16:25 导出（原始 33 点）<br>加 100 nF<br>真值 138.5~3315 mV<br>有效 31 点（可用 26，饱和 5，异常 2）</p></div>
+</div>
+
+<figure><img src="images/diagram_wiring.png" alt="接线示意">
+<figcaption>图 2　接线示意（示意图，脚本生成）：3V3/GND 分压，抽头接 GPIO3，100 nF 对 GND；
+万用表跨接抽头与 GND 读取真值。测 3.3 V 前需 1:2 分压。</figcaption></figure>
+
+<h3>2.3 数据处理</h3>
+<ul>
+<li>误差：<code>err = measured − true</code>；INL：各自最佳拟合直线的最大残差。</li>
+<li>饱和判据：<code>raw ≥ 4090</code>（满量程 4095），该区间不能用于线性度统计。</li>
+<li>异常点判据：<code>|线性换算 − 真值| &gt; 1000 mV</code>。正常点线性误差最大约 400 mV，阈值不会误伤；用于排除输错单位/电位器位置不对的点。</li>
+<li>两点修正：在 IDF 校准值上做 <code>true ≈ a×cal + b</code>，按 0.1~2.7 V 数据拟合。</li>
+</ul>
+<div class="callout warn"><b>数据修正说明：</b>会话 B 原始 33 点中有 2 点真值为 3000/3300 mV 但 raw≈0，
+明显是输入与读数不同步（可能输错单位/位置）。这 2 点会把 max 误差抬到 3300 mV，已排除；
+另有 5 点处于 2.89 V 以上饱和区，也单独统计。</div>
+
+<h3>2.4 实物照片</h3>
+<div class="grid2">
+<figure><img src="images/board_pot.jpg" alt="板端与电位器">
+<figcaption>图 3a　ESP32-C3 SuperMini 与 103 多圈电位器接线</figcaption></figure>
+<figure><img src="images/board_detail.jpg" alt="板端细节">
+<figcaption>图 3b　板端细节：GPIO3 抽头与 100 nF 就近连接</figcaption></figure>
+</div>
+<figure><img src="images/multimeter.jpg" alt="万用表" style="max-width:520px">
+<figcaption>图 4　万用表读数示例（1.662 V）；正式采点以每次读数录入 GUI 为准。</figcaption></figure>
+<p class="small">实物照片来自 <code>docs/</code>；系统框图、接线图、流程图由脚本生成，用于说明结构，不代表精确尺寸。</p>
+
+<h2 id="s3">3. 结论摘要</h2>
+<div class="cards">
+<div class="card"><div class="v">6.73 mV</div><div class="l">100 nF 下校准 RMS（0.1~2.7 V）</div></div>
+<div class="card"><div class="v">12.6 mV</div><div class="l">100 nF 下校准 max（0.1~2.7 V）</div></div>
+<div class="card"><div class="v">1.05 mV</div><div class="l">加 100 nF 后窗内 σ（1.65 V）</div></div>
+<div class="card"><div class="v">2.89 V</div><div class="l">12 dB 实测饱和点</div></div>
+</div>
+<ol>
+<li><b>ESP-IDF 校准远优于原始码线性换算。</b>会话 B（0.1~2.7 V，24 点）：校准 RMS
+<b>6.73 mV</b>、max <b>12.6 mV</b>；线性 RMS <b>162.6 mV</b>、max <b>306.0 mV</b>。
+RMS / max 均约相差 <b>24 倍</b>。</li>
+<li><b><code>raw×3300/4095</code> 不能直接当电压用。</b>0.5~2.5 V 系统性偏大 +7%~+12%；
+2.7 V 处偏大约 +306 mV。</li>
+<li><b>12 dB 档不能覆盖 0~3.3 V。</b>约 2.89 V 起 raw 饱和在 4095，校准钳在 2940 mV；
+实际可用上限约 2.87 V。测 3.3 V 必须外部 1:2 分压。</li>
+<li><b>100 nF 是噪声关键。</b>1.65 V 处窗内 σ 从 30.76 mV 降到 <b>1.05 mV</b>，
+峰峰值从 249.7 mV 降到 <b>7.3 mV</b>；单窗口 ENOB 从 6.5 bit 提到 11.4 bit。</li>
+<li><b>Wi-Fi 干扰很小。</b>100 nF 下 Wi-Fi 压测使 σ 从 1.05 mV 升到 <b>1.79 mV</b>
+（+70%），绝对增量 &lt;1 mV；常规测量可保持开启。</li>
+<li><b>两点修正可进一步提高精度。</b>在 IDF 校准上做一次 gain/offset 修正，
+0.1~2.7 V 的 max/RMS 可到 <b>5.53 / 3.12 mV</b>。</li>
+</ol>
+
+<h2 id="s4">4. 会话 A：291 点全量程扫描（无 100 nF）</h2>
+<p>会话 A 用于观察全量程趋势与饱和区。因未加 100 nF，噪声较大，RMS 被抬高；
+精度结论应以会话 B 为准。</p>
+<figure><img src="images/sessionA_full.png" alt="291 点全量程">
+<figcaption>图 5　291 点全量程：上图为测量值 vs 真值（阴影为饱和区），下图为误差 vs 真值。
+可见原始码线性在中段偏大 +100~+400 mV，校准值在 2.7 V 以下基本贴近 1:1。</figcaption></figure>
+<table class="data"><thead><tr><th>真值范围</th><th>点数</th><th>校准 max / RMS</th><th>线性 max / RMS</th></tr></thead><tbody><tr><td>0.1~2.6 V</td><td>220</td><td>24.4 / 9.7 mV</td><td>297.4 / 148.4 mV</td></tr><tr><td>0.1~2.7 V</td><td>230</td><td>28.0 / 10.8 mV</td><td>328.5 / 159.4 mV</td></tr><tr><td>0.1~2.8 V</td><td>239</td><td>40.0 / 12.7 mV</td><td>365.0 / 170.7 mV</td></tr><tr><td>0.03~2.87 V（raw&lt;4090）</td><td>255</td><td>54.4 / 15.2 mV</td><td>409.1 / 179.4 mV</td></tr><tr><td>含饱和全量程</td><td>291</td><td>373.0 / 77.1 mV</td><td>409.1 / 187.9 mV</td></tr></tbody></table>
+<div class="callout warn"><b>饱和区：</b>36 点 raw≥4090，真值 2890~3313 mV；
+校准输出钳在 2937.8~2940.0 mV，线性输出钳在 3297.0~3300.0 mV。
+全量程 max 被饱和平台主导，不能用于评价线性度。</div>
+
+<h2 id="s5">5. 会话 B：31 点复测（100 nF）</h2>
+<p>加 100 nF 后噪声降到 1 mV 级，复测得到更可信的校准残差。原始导出 33 点，
+排除 5 个饱和点与 2 个异常点后，得到 26 个可用点；其中 0.1~2.7 V 为 24 点。</p>
+<figure><img src="images/gui_right.png" alt="GUI 右侧" style="max-width:480px">
+<figcaption>图 6　上位机 GUI 右侧：当前读数、Wi-Fi 负载按钮、标定点表格与统计（载入 24 个有效点）。</figcaption></figure>
+<figure><img src="images/sessionB_24pts.png" alt="24 点精度">
+<figcaption>图 7　100 nF 下 0.1~2.7 V（24 点）测量值/误差 vs 真值。校准误差基本在 ±15 mV 内，
+线性误差随电压增大到 +306 mV。</figcaption></figure>
+<table class="data"><thead><tr><th>真值范围</th><th>点数</th><th>校准 max / RMS</th><th>线性 max / RMS</th><th>校准 INL</th></tr></thead><tbody><tr><td>0.1~2.7 V</td><td>24</td><td><b>12.6 / 6.73 mV</b></td><td><b>306.0 / 162.6 mV</b></td><td>5.56 mV</td></tr><tr><td>0.1~2.8 V</td><td>25</td><td>20.3 / 7.74 mV</td><td>336.0 / 172.9 mV</td><td>7.19 mV</td></tr><tr><td>0.14~2.87 V</td><td>26</td><td>40.8 / 11.03 mV</td><td>390.3 / 186.0 mV</td><td>23.11 mV</td></tr></tbody></table>
+<h3>5.1 校准残差形态</h3>
+<ul>
+<li>约 0.14 V：-7.6 mV；约 1.1 V 过零；</li>
+<li>1.5~2.1 V：约 +5~+10 mV；</li>
+<li>2.76 V：+20.3 mV；2.87 V（接近饱和）：+40.8 mV。</li>
+</ul>
+<p>这说明 IDF 校准已经修正了主要非线性，剩余的是一个平滑的系统性残差；
+在接近饱和时误差增大。</p>
+<h3>5.2 两点软件修正</h3>
+<p>在 IDF 校准值上做 <code>true ≈ 0.99322×cal + 6.85 mV</code>（0.1~2.7 V 拟合），
+结果为 <b>max 5.53 mV、RMS 3.12 mV</b>；二次拟合没有明显额外收益。</p>
+
+<h2 id="s6">6. 噪声、100 nF 与 Wi-Fi 干扰</h2>
+<figure><img src="images/chart_noise.png" alt="噪声对比">
+<figcaption>图 8　1.650 V 处窗内噪声对比（对数纵轴）：无 100 nF 时 σ 30.76 mV；
+加 100 nF 后 1.05 mV；Wi-Fi 压测时 1.79 mV。</figcaption></figure>
+<table class="data"><thead><tr><th>场景</th><th>窗内 σ</th><th>峰峰值（均值）</th><th>单窗口 ENOB</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>无 100 nF，Wi-Fi 关</td><td>30.76 mV</td><td>249.7 mV</td><td>6.5 bit</td><td>1.650 V</td></tr>
+<tr><td>有 100 nF，Wi-Fi 关</td><td><b>1.05 mV</b></td><td><b>7.3 mV</b></td><td><b>11.4 bit</b></td><td>1.650 V</td></tr>
+<tr><td>有 100 nF，Wi-Fi 开 + 压测</td><td><b>1.79 mV</b></td><td>14.0 mV</td><td>—</td><td>~210 pps / 2.4 Mb/s</td></tr>
+</tbody></table>
+<figure><img src="images/gui_burst.png" alt="噪声频谱">
+<figcaption>图 9　加 100 nF 后高速抓取（8192 点 @ 7249 Hz）：波形约 1815 mV，
+50 Hz 分量仅 0.40 mV，100 Hz 0.03 mV；无明显工频拾取。</figcaption></figure>
+<figure><img src="images/chart_accuracy.png" alt="精度对比">
+<figcaption>图 10　0.1~2.7 V 精度对比（对数纵轴）：IDF 校准、IDF+两点修正、原始码线性。</figcaption></figure>
+<p>100 nF 前后的差异说明：此前几百 mV 的跳变主要是高阻输入 + 长引线 + 无采样电容
+拾取的宽带/脉冲噪声，不是 ADC 本身。加 100 nF 后 50 Hz 也仅 0.40 mV。</p>
+
+<h2 id="s7">7. 分辨率、精确度与量程</h2>
+<h3>7.1 实际可用分辨率</h3>
+<table class="data"><thead><tr><th>指标</th><th>无 100 nF</th><th>有 100 nF</th></tr></thead><tbody>
+<tr><td>单次 64 点窗口 σ</td><td>25~31 mV</td><td><b>1.05 mV</b></td></tr>
+<tr><td>10 点平均（0.5 s）σ</td><td>8~10 mV</td><td><b>约 0.3 mV</b></td></tr>
+<tr><td>单窗口 ENOB（2.7 V 量程）</td><td>6.5 bit</td><td><b>11.4 bit</b></td></tr>
+<tr><td>0.5 s 平均等效位数</td><td>约 8.4 bit</td><td>约 12 bit（受校准限制）</td></tr>
+</tbody></table>
+<h3>7.2 精确度</h3>
+<table class="data"><thead><tr><th>方案</th><th>max 误差</th><th>RMS</th><th>说明</th></tr></thead><tbody>
+<tr><td>IDF 校准（0.1~2.7 V）</td><td><b>12.6 mV</b></td><td><b>6.73 mV</b></td><td>会话 B，24 点</td></tr>
+<tr><td>IDF + 两点修正</td><td><b>5.53 mV</b></td><td><b>3.12 mV</b></td><td>同批数据拟合，略乐观</td></tr>
+<tr><td>原始码线性</td><td>306.0 mV</td><td>162.6 mV</td><td>不可用于测量</td></tr>
+<tr><td>1.650 V 单点</td><td>+21.9 mV</td><td>—</td><td>校准 1671.9 mV</td></tr>
+</tbody></table>
+<div class="callout ok"><b>结论：</b>加 100 nF 后，噪声已小于校准残差；实际精确度由
+<b>IDF 校准的系统误差</b>决定（约 ±7 mV RMS / ±13 mV max，0.1~2.7 V）。
+需要更高精度时加两点修正；要求 1 mV 级精度建议外部 16-bit ADC。</div>
+<h3>7.3 量程</h3>
+<p>12 dB 档实测约 <b>2.89 V</b> 饱和：raw=4095，校准 2940 mV，线性 3300 mV。
+可用上限约 <b>2.87 V</b>。3.3 V 输入必须外部 <b>1:2 分压</b>，
+分压电阻误差（如 1%）会直接叠加。</p>
+
+<h2 id="s8">8. 建议</h2>
+<ol>
+<li><b>固件/软件：</b>任何电压测量都用 <code>adc_cali_raw_to_voltage()</code>；
+不要用 <code>raw×3300/4095</code>。需要更高精度时加两点 gain/offset 修正，参数按板/通道/衰减档位单独标定。</li>
+<li><b>硬件：</b>100 nF 必加（已验证 σ 30.8→1.05 mV）；缩短引线，检查抽头/GND 接触；
+电位器两端加 100 nF 去耦。</li>
+<li><b>3.3 V：</b>先 1:2 分压，不要直接接 GPIO3；分压后重新标定。</li>
+<li><b>采点：</b>用「稳定判据 + 10 行平均」；有 100 nF 后阈值可设 5~10 mV。
+记录前检查真值与 raw 是否大致一致，防止输错单位/位置。</li>
+<li><b>Wi-Fi：</b>常规测量可保持开启（+0.7 mV RMS）；亚 mV 测量时关闭。</li>
+</ol>
+
+<h2 id="s9">9. 附录：数据文件与复现</h2>
+<h3>9.1 两次会话文件</h3>
+<ul>
+<li><b>会话 A（291 点，无 100 nF）</b>：<code>data/session_A_291points/</code> 下的
+<code>adc_points_20261030_140112.csv</code>、<code>adc_session_20261030_140135.json</code> 与报告。</li>
+<li><b>会话 B（31 点，100 nF；原始 33 点）</b>：<code>data/session_B_31points/</code> 下的
+<code>adc_points_20261030_162534.csv</code>、<code>adc_session_20261030_162516.json</code>；
+清洗文件 <code>sweep31/26/24</code> CSV 同目录。</li>
+</ul>
+<h3 style="page-break-before:always">9.2 0.1~2.7 V 的 24 个有效点</h3>
+<table class="data"><thead><tr><th>#</th><th>真值 mV</th><th>raw</th><th>校准 mV</th><th>线性 mV</th><th>校准误差</th><th>线性误差</th><th>两点修正残差</th></tr></thead><tbody><tr><td>1</td><td>2668.0</td><td>3690.5</td><td>2680.6</td><td>2974.0</td><td>+12.60</td><td>+306.0</td><td>-1.28</td></tr><tr><td>2</td><td>2610.0</td><td>3596.3</td><td>2619.0</td><td>2898.1</td><td>+9.00</td><td>+288.1</td><td>+1.91</td></tr><tr><td>3</td><td>2489.0</td><td>3412.5</td><td>2494.7</td><td>2750.0</td><td>+5.70</td><td>+261.0</td><td>+4.36</td></tr><tr><td>4</td><td>2382.0</td><td>3255.5</td><td>2385.8</td><td>2623.5</td><td>+3.80</td><td>+241.5</td><td>+5.53</td></tr><tr><td>5</td><td>2249.0</td><td>3065.3</td><td>2254.0</td><td>2470.2</td><td>+5.00</td><td>+221.2</td><td>+3.43</td></tr><tr><td>6</td><td>2128.0</td><td>2895.1</td><td>2133.9</td><td>2333.0</td><td>+5.90</td><td>+205.0</td><td>+1.72</td></tr><tr><td>7</td><td>2019.0</td><td>2746.6</td><td>2027.0</td><td>2213.4</td><td>+8.00</td><td>+194.4</td><td>-1.11</td></tr><tr><td>8</td><td>1906.0</td><td>2589.1</td><td>1915.0</td><td>2086.5</td><td>+9.00</td><td>+180.5</td><td>-2.87</td></tr><tr><td>9</td><td>1767.0</td><td>2397.2</td><td>1775.9</td><td>1931.8</td><td>+8.90</td><td>+164.8</td><td>-3.71</td></tr><tr><td>10</td><td>1688.0</td><td>2288.3</td><td>1698.0</td><td>1844.1</td><td>+10.00</td><td>+156.1</td><td>-5.34</td></tr><tr><td>11</td><td>1629.0</td><td>2205.2</td><td>1637.1</td><td>1777.0</td><td>+8.10</td><td>+148.0</td><td>-3.85</td></tr><tr><td>12</td><td>1550.0</td><td>2098.1</td><td>1557.4</td><td>1690.7</td><td>+7.40</td><td>+140.7</td><td>-3.69</td></tr><tr><td>13</td><td>1485.0</td><td>2007.6</td><td>1492.5</td><td>1617.9</td><td>+7.50</td><td>+132.9</td><td>-4.23</td></tr><tr><td>14</td><td>1396.0</td><td>1882.9</td><td>1400.9</td><td>1517.4</td><td>+4.90</td><td>+121.4</td><td>-2.25</td></tr><tr><td>15</td><td>1313.0</td><td>1769.8</td><td>1318.0</td><td>1426.2</td><td>+5.00</td><td>+113.2</td><td>-2.91</td></tr><tr><td>16</td><td>1230.0</td><td>1653.7</td><td>1232.2</td><td>1332.6</td><td>+2.20</td><td>+102.6</td><td>-0.70</td></tr><tr><td>17</td><td>1119.0</td><td>1498.0</td><td>1118.1</td><td>1207.2</td><td>-0.90</td><td>+88.2</td><td>+1.63</td></tr><tr><td>18</td><td>1009.0</td><td>1343.3</td><td>1004.0</td><td>1082.5</td><td>-5.00</td><td>+73.5</td><td>+4.96</td></tr><tr><td>19</td><td>877.0</td><td>1164.9</td><td>871.9</td><td>938.7</td><td>-5.10</td><td>+61.7</td><td>+4.16</td></tr><tr><td>20</td><td>689.0</td><td>912.2</td><td>685.2</td><td>735.1</td><td>-3.80</td><td>+46.1</td><td>+1.60</td></tr><tr><td>21</td><td>569.3</td><td>751.3</td><td>565.3</td><td>605.4</td><td>-4.00</td><td>+36.1</td><td>+0.98</td></tr><tr><td>22</td><td>376.7</td><td>491.8</td><td>371.8</td><td>396.3</td><td>-4.90</td><td>+19.6</td><td>+0.57</td></tr><tr><td>23</td><td>253.5</td><td>328.9</td><td>249.0</td><td>265.1</td><td>-4.50</td><td>+11.6</td><td>-0.66</td></tr><tr><td>24</td><td>138.5</td><td>171.7</td><td>130.9</td><td>138.4</td><td>-7.60</td><td>-0.1</td><td>+1.64</td></tr></tbody></table>
+<p class="small">两点修正残差按 <code>true − (0.99322×cal + 6.85)</code> 计算。</p>
+<h3>9.3 排除点</h3>
+<ul>
+<li><b>饱和 5 点</b>（会话 B）：真值 3315、3257、3128、3034、2957 mV，raw=4095；</li>
+<li><b>异常 2 点</b>：真值 3300/3000 mV，raw 0.30/0.09，线性和≈0，明显输入与读数不同步。</li>
+</ul>
+<h3>9.4 复现命令</h3>
+<pre class="small">cd ESP32C3_ADC_Linearity
+# GUI 采集
+.venv/bin/python host/gui.py --port /dev/ttyACM0
+# 命令行采点
+.venv/bin/python host/sweep.py --port /dev/ttyACM0
+# 离线分析（自动排除饱和/异常点）
+.venv/bin/python host/analyze.py data/20261030_sweep24_100nF_0p1-2p7.csv</pre>
+<div class="footer">
+<p>报告生成：2026-10-30 · 数据来源：ESP32-C3 SuperMini + ESP-IDF v5.5.5 + SANWA PC700。</p>
+<p>说明：真值为万用表人工读数，不含万用表自身精度；INL 为各自最佳拟合直线的最大残差。
+本报告中的“两点修正”参数来自同一批数据拟合，属于回代误差，独立验证会略差。</p>
+</div>
+</main></div></body></html>
