@@ -42,7 +42,19 @@ GPIO3（丝印 3）── 抽头
 GPIO3 ──||── GND   (100 nF，建议)
 ```
 
-输入范围 0~3.3 V，禁止超压。
+输入范围 0~3.3 V，禁止超压。电位器为 **103（10 kΩ）精密多圈**型号；
+抽头对 GND 加 100 nF 可把窗内 σ 从约 30 mV 降到约 1 mV。
+
+## Wi-Fi 负载（可选）
+
+公开仓库不包含任何 Wi-Fi 凭据。需要做 Wi-Fi 干扰实验时：
+
+```bash
+cp main/wifi_secrets.example.h main/wifi_secrets.h
+# 编辑 main/wifi_secrets.h，填入 WIFI_SSID / WIFI_PASS
+```
+
+`main/wifi_secrets.h` 已在 `.gitignore` 中，不会被提交。
 
 ## 固件串口命令（v2）
 
